@@ -229,4 +229,3 @@ This project is licensed under the MIT License. Digilent Adept tools are subject
 [Report Bug](https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/issues) • [Request Feature](https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/issues)
 
 </div>
-```
