@@ -230,13 +230,3 @@ This project is licensed under the MIT License. Digilent Adept tools are subject
 
 </div>
 ```
-
-This README features:
-- Clean visual design with centered headers and badges
-- Tables for organized information
-- Collapsible sections for troubleshooting
-- Clear command examples with output
-- Status indicators (✅/❌/❓)
-- Professional formatting that renders well on GitHub
-- Complete installation and usage instructions
-- Easy-to-scan layout with emojis for visual navigation
