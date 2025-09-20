@@ -42,23 +42,11 @@ if [ -f /etc/apt/sources.list.d/docker.list ]; then
     sudo rm -f /etc/apt/sources.list.d/docker.list
 fi
 
-sudo apt update
+sudo apt update >/dev/null 2>&1
 
-# Install dependencies
+# Install minimal dependencies (Qt5 not needed for command-line tools)
 echo "📦 Installing dependencies..."
-sudo apt install -y \
-    wget \
-    libqt5multimedia5 \
-    libqt5multimedia5-plugins \
-    libqt5scripttools5 \
-    libqt5serialport5 \
-    libqt5widgets5 \
-    libqt5gui5 \
-    libqt5core5a \
-    libqt5svg5 \
-    libqt5printsupport5 \
-    libqt5network5 \
-    libqt5multimediagsttools5 2>/dev/null || true
+sudo apt install -y wget libusb-1.0-0 libftdi1-2 2>/dev/null || true
 
 # Create temp directory
 TEMP_DIR=$(mktemp -d)
@@ -66,35 +54,79 @@ cd "$TEMP_DIR"
 
 echo "⬇️  Downloading Digilent packages for $ARCH..."
 
+# GitHub repository base URL
+GITHUB_BASE="https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-programmer/main"
+
 # Download appropriate packages based on architecture
 if [[ "$ARCH" == "arm64" ]]; then
-    RUNTIME_URL="https://digilent.s3.amazonaws.com/Software/Adept2Runtime/2.27.9/digilent.adept.runtime_2.27.9-arm64.deb"
+    # Runtime from your GitHub repo
+    RUNTIME_URL="${GITHUB_BASE}/packages/digilent.adept.runtime_2.27.9-arm64.deb"
+    # Utilities from Digilent (or also host on your repo)
     UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-arm64.deb"
     RUNTIME_FILE="digilent.adept.runtime_2.27.9-arm64.deb"
     UTILITIES_FILE="digilent.adept.utilities_2.7.1-arm64.deb"
 else
-    RUNTIME_URL="https://digilent.s3.amazonaws.com/Software/Adept2Runtime/2.27.9/digilent.adept.runtime_2.27.9-armhf.deb"
-    UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-armhf.deb"
+    # For armhf, you'll need to host these files too if Digilent doesn't provide them
+    echo "⚠️  ARMHF support: Checking for packages..."
+    # Try to get from your repo first
+    RUNTIME_URL="${GITHUB_BASE}/packages/digilent.adept.runtime_2.27.9-armhf.deb"
+    UTILITIES_URL="${GITHUB_BASE}/packages/digilent.adept.utilities_2.7.1-armhf.deb"
+    
+    # Fallback to Digilent if not in your repo
+    if ! wget --spider -q "$RUNTIME_URL" 2>/dev/null; then
+        echo "   Falling back to Digilent servers for ARMHF..."
+        RUNTIME_URL="https://digilent.s3.amazonaws.com/Software/Adept2Runtime/2.27.9/digilent.adept.runtime_2.27.9-armhf.deb"
+        UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-armhf.deb"
+    fi
+    
     RUNTIME_FILE="digilent.adept.runtime_2.27.9-armhf.deb"
     UTILITIES_FILE="digilent.adept.utilities_2.7.1-armhf.deb"
 fi
 
-# Download packages with progress
-echo "  📥 Downloading Adept Runtime..."
-wget -q --show-progress -O "$RUNTIME_FILE" "$RUNTIME_URL"
+# Download packages with progress and error handling
+echo "  📥 Downloading Adept Runtime from repository..."
+if ! wget -q --show-progress -O "$RUNTIME_FILE" "$RUNTIME_URL"; then
+    echo "❌ Failed to download runtime package"
+    echo "   URL: $RUNTIME_URL"
+    exit 1
+fi
 
 echo "  📥 Downloading Adept Utilities..."
-wget -q --show-progress -O "$UTILITIES_FILE" "$UTILITIES_URL"
+if ! wget -q --show-progress -O "$UTILITIES_FILE" "$UTILITIES_URL"; then
+    echo "❌ Failed to download utilities package"
+    echo "   URL: $UTILITIES_URL"
+    exit 1
+fi
+
+# Verify downloads
+echo "🔍 Verifying downloads..."
+if [[ ! -f "$RUNTIME_FILE" ]] || [[ ! -s "$RUNTIME_FILE" ]]; then
+    echo "❌ Runtime package download failed or is empty"
+    exit 1
+fi
+
+if [[ ! -f "$UTILITIES_FILE" ]] || [[ ! -s "$UTILITIES_FILE" ]]; then
+    echo "❌ Utilities package download failed or is empty"
+    exit 1
+fi
 
 # Install packages
 echo "📦 Installing Adept Runtime..."
-sudo dpkg -i "$RUNTIME_FILE" >/dev/null
+if ! sudo dpkg -i "$RUNTIME_FILE"; then
+    echo "⚠️  Fixing dependencies..."
+    sudo apt install -f -y
+    sudo dpkg -i "$RUNTIME_FILE"
+fi
 
 echo "📦 Installing Adept Utilities..."
-sudo dpkg -i "$UTILITIES_FILE" >/dev/null
+if ! sudo dpkg -i "$UTILITIES_FILE"; then
+    echo "⚠️  Fixing dependencies..."
+    sudo apt install -f -y
+    sudo dpkg -i "$UTILITIES_FILE"
+fi
 
-# Fix any dependency issues
-sudo apt install -f -y >/dev/null 2>&1
+# Update library cache
+sudo ldconfig
 
 # Set up USB permissions
 echo "🔐 Setting up USB permissions..."
@@ -119,6 +151,18 @@ sudo udevadm trigger
 cd /
 rm -rf "$TEMP_DIR"
 
+# Test installation
+echo ""
+echo "🧪 Testing installation..."
+if command -v djtgcfg >/dev/null 2>&1; then
+    echo "✅ djtgcfg installed successfully!"
+    # Try to show version (might need USB permissions)
+    djtgcfg --version 2>/dev/null || echo "   (Version check requires USB permissions - reboot needed)"
+else
+    echo "❌ Installation verification failed"
+    echo "   djtgcfg command not found"
+fi
+
 echo ""
 echo "✅ Installation completed successfully!"
 echo ""
@@ -132,13 +176,17 @@ echo ""
 echo "3. 🔌 Connect your Digilent FPGA board and verify detection"
 echo ""
 echo "4. 🎯 Program .bit files with:"
-echo "   djtgcfg prog -d [DeviceName] -i 0 -f your_design.bit -v"
+echo "   djtgcfg prog -d [DeviceName] -i 0 -f your_design.bit"
 echo ""
 echo "📚 Common device names:"
 echo "   • Arty S7:    ArtyS7"
 echo "   • Arty A7:    ArtyA7" 
 echo "   • Basys 3:    Basys3"
 echo "   • Nexys A7:   NexysA7"
+echo "   • Cmod A7:    CmodA7"
+echo "   • Zybo Z7:    ZyboZ7"
+echo ""
+echo "📖 For more options: djtgcfg --help"
 echo ""
 echo "🎉 Your Raspberry Pi FPGA Programming Station is ready!"
 echo ""
