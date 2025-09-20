@@ -46,7 +46,7 @@ sudo apt update >/dev/null 2>&1
 
 # Install minimal dependencies (Qt5 not needed for command-line tools)
 echo "📦 Installing dependencies..."
-sudo apt install -y wget libusb-1.0-0 libftdi1-2 2>/dev/null || true
+sudo apt install -y wget curl libusb-1.0-0 libftdi1-2 2>/dev/null || true
 
 # Create temp directory
 TEMP_DIR=$(mktemp -d)
@@ -55,47 +55,81 @@ cd "$TEMP_DIR"
 echo "⬇️  Downloading Digilent packages for $ARCH..."
 
 # GitHub repository base URL
-GITHUB_BASE="https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-programmer/main"
+GITHUB_BASE="https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main"
 
 # Download appropriate packages based on architecture
 if [[ "$ARCH" == "arm64" ]]; then
-    # Runtime from your GitHub repo
-    RUNTIME_URL="${GITHUB_BASE}/packages/digilent.adept.runtime_2.27.9-arm64.deb"
-    # Utilities from Digilent (or also host on your repo)
-    UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-arm64.deb"
+    # Runtime from your GitHub repo - using raw URL
+    RUNTIME_URL="${GITHUB_BASE}/digilent.adept.runtime_2.27.9-arm64.deb"
     RUNTIME_FILE="digilent.adept.runtime_2.27.9-arm64.deb"
-    UTILITIES_FILE="digilent.adept.utilities_2.7.1-arm64.deb"
-else
-    # For armhf, you'll need to host these files too if Digilent doesn't provide them
-    echo "⚠️  ARMHF support: Checking for packages..."
-    # Try to get from your repo first
-    RUNTIME_URL="${GITHUB_BASE}/packages/digilent.adept.runtime_2.27.9-armhf.deb"
-    UTILITIES_URL="${GITHUB_BASE}/packages/digilent.adept.utilities_2.7.1-armhf.deb"
     
-    # Fallback to Digilent if not in your repo
-    if ! wget --spider -q "$RUNTIME_URL" 2>/dev/null; then
-        echo "   Falling back to Digilent servers for ARMHF..."
+    # Utilities - check if it's in your repo first
+    UTILITIES_URL="${GITHUB_BASE}/digilent.adept.utilities_2.7.1-arm64.deb"
+    UTILITIES_FILE="digilent.adept.utilities_2.7.1-arm64.deb"
+    
+    # Check if utilities exists in your repo, if not use Digilent's URL
+    if ! curl -L --head --fail "$UTILITIES_URL" >/dev/null 2>&1; then
+        echo "  📋 Utilities not found in repository, using Digilent servers..."
+        UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-arm64.deb"
+    fi
+else
+    # For armhf
+    echo "⚠️  ARMHF support: Checking for packages..."
+    # Try to get runtime from your repo first
+    RUNTIME_URL="${GITHUB_BASE}/digilent.adept.runtime_2.27.9-armhf.deb"
+    RUNTIME_FILE="digilent.adept.runtime_2.27.9-armhf.deb"
+    
+    # Check if runtime exists in your repo
+    if ! curl -L --head --fail "$RUNTIME_URL" >/dev/null 2>&1; then
+        echo "   Runtime not found in repository, using Digilent servers..."
         RUNTIME_URL="https://digilent.s3.amazonaws.com/Software/Adept2Runtime/2.27.9/digilent.adept.runtime_2.27.9-armhf.deb"
-        UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-armhf.deb"
     fi
     
-    RUNTIME_FILE="digilent.adept.runtime_2.27.9-armhf.deb"
+    # Try to get utilities from your repo
+    UTILITIES_URL="${GITHUB_BASE}/digilent.adept.utilities_2.7.1-armhf.deb"
     UTILITIES_FILE="digilent.adept.utilities_2.7.1-armhf.deb"
+    
+    # Check if utilities exists in your repo
+    if ! curl -L --head --fail "$UTILITIES_URL" >/dev/null 2>&1; then
+        echo "   Utilities not found in repository, using Digilent servers..."
+        UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-armhf.deb"
+    fi
 fi
 
-# Download packages with progress and error handling
-echo "  📥 Downloading Adept Runtime from repository..."
-if ! wget -q --show-progress -O "$RUNTIME_FILE" "$RUNTIME_URL"; then
-    echo "❌ Failed to download runtime package"
-    echo "   URL: $RUNTIME_URL"
-    exit 1
+# Download runtime package with curl (better for GitHub)
+echo "  📥 Downloading Adept Runtime..."
+if [[ "$RUNTIME_URL" == *"github.com"* ]]; then
+    # Use curl for GitHub
+    if ! curl -L -o "$RUNTIME_FILE" "$RUNTIME_URL"; then
+        echo "❌ Failed to download runtime package from GitHub"
+        echo "   URL: $RUNTIME_URL"
+        exit 1
+    fi
+else
+    # Use wget for other sources
+    if ! wget -q --show-progress -O "$RUNTIME_FILE" "$RUNTIME_URL"; then
+        echo "❌ Failed to download runtime package"
+        echo "   URL: $RUNTIME_URL"
+        exit 1
+    fi
 fi
 
+# Download utilities package
 echo "  📥 Downloading Adept Utilities..."
-if ! wget -q --show-progress -O "$UTILITIES_FILE" "$UTILITIES_URL"; then
-    echo "❌ Failed to download utilities package"
-    echo "   URL: $UTILITIES_URL"
-    exit 1
+if [[ "$UTILITIES_URL" == *"github.com"* ]]; then
+    # Use curl for GitHub
+    if ! curl -L -o "$UTILITIES_FILE" "$UTILITIES_URL"; then
+        echo "❌ Failed to download utilities package from GitHub"
+        echo "   URL: $UTILITIES_URL"
+        exit 1
+    fi
+else
+    # Use wget for other sources
+    if ! wget -q --show-progress -O "$UTILITIES_FILE" "$UTILITIES_URL"; then
+        echo "❌ Failed to download utilities package"
+        echo "   URL: $UTILITIES_URL"
+        exit 1
+    fi
 fi
 
 # Verify downloads
@@ -110,7 +144,7 @@ if [[ ! -f "$UTILITIES_FILE" ]] || [[ ! -s "$UTILITIES_FILE" ]]; then
     exit 1
 fi
 
-# Install packages
+# Install runtime first
 echo "📦 Installing Adept Runtime..."
 if ! sudo dpkg -i "$RUNTIME_FILE"; then
     echo "⚠️  Fixing dependencies..."
@@ -118,6 +152,7 @@ if ! sudo dpkg -i "$RUNTIME_FILE"; then
     sudo dpkg -i "$RUNTIME_FILE"
 fi
 
+# Install utilities after runtime
 echo "📦 Installing Adept Utilities..."
 if ! sudo dpkg -i "$UTILITIES_FILE"; then
     echo "⚠️  Fixing dependencies..."
