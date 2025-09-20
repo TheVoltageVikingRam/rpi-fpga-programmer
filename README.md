@@ -1,229 +1,233 @@
-# Raspberry Pi FPGA Programming Station
+Here's a comprehensive README.md with visual design using GitHub-supported markdown:
 
-Transform your Raspberry Pi into a powerful, portable FPGA programming station for Digilent boards using Adept utilities.
+```markdown
+<div align="center">
 
-![Raspberry Pi + FPGA](https://img.shields.io/badge/Raspberry%20Pi-A22846?style=for-the-badge&logo=Raspberry%20Pi&logoColor=white) ![FPGA](https://img.shields.io/badge/FPGA-Programming-blue?style=for-the-badge) ![Digilent](https://img.shields.io/badge/Digilent-Adept-orange?style=for-the-badge)
+# 🚀 Raspberry Pi FPGA Programmer
 
-## 🎯 What This Does
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi-red)](https://www.raspberrypi.org/)
+[![Architecture](https://img.shields.io/badge/Arch-ARM64%20%7C%20ARMHF-blue)](https://www.raspberrypi.org/)
+[![Digilent](https://img.shields.io/badge/Digilent-Adept-green)](https://digilent.com/)
 
-- **Program Digilent FPGA boards** (Arty S7, Basys 3, Nexys, etc.) directly from Raspberry Pi
-- **Use .bit files** generated from Vivado on other machines
-- **Portable development station** - program FPGAs anywhere with just a Pi
-- **Cost-effective solution** - no need for expensive dedicated programmers
+**Transform your Raspberry Pi into a portable FPGA programming station!**
 
-## 📋 Requirements
+Program Xilinx FPGAs directly from your Pi with Digilent boards
 
-### Hardware
-- Raspberry Pi 4 or 5 (ARM64 recommended)
-- MicroSD card (16GB+)
-- USB cable for your Digilent board
-- Digilent FPGA board (Arty S7, Basys 3, Nexys, etc.)
+[Installation](#-installation) • [Usage](#-usage) • [Supported Boards](#-supported-boards) • [Troubleshooting](#-troubleshooting)
 
-### Software
-- Raspberry Pi OS (64-bit Bookworm recommended)
-- Internet connection for initial setup
+</div>
 
-## 🚀 Quick Start
+---
 
-### One-Command Installation
+## ✨ Features
+
+<table>
+<tr>
+<td>
+
+### 🎯 Key Benefits
+- **🔧 One-Line Installation** - Automated setup script
+- **📦 Complete Toolchain** - Runtime + Utilities included  
+- **🔐 USB Permissions** - Auto-configured udev rules
+- **💻 Multi-Architecture** - ARM64 & ARMHF support
+- **🎮 Popular Boards** - Arty, Basys, Nexys & more
+
+</td>
+<td>
+
+### 📋 What's Included
+- Digilent Adept Runtime 2.27.9
+- Digilent Adept Utilities 2.7.1
+- USB device permissions
+- JTAG programming tools
+- Command-line interface
+
+</td>
+</tr>
+</table>
+
+## 🚀 Installation
+
+### Quick Install (Recommended)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-programmer/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-programmer/main/install.sh | bash
 ```
 
 ### Manual Installation
 
+<details>
+<summary>📖 Click for manual installation steps</summary>
+
+#### For ARM64 (Raspberry Pi 4/5)
+
 ```bash
-# Check your architecture
-dpkg --print-architecture
-
-# Clean up any existing installations
-sudo dpkg --remove --force-remove-reinstreq digilent.* 2>/dev/null
-sudo apt --fix-broken install
-sudo apt update
-
-# Install dependencies
-sudo apt install libqt5multimedia5 libqt5multimedia5-plugins libqt5scripttools5 libqt5serialport5 libqt5widgets5 libqt5gui5 libqt5core5a
-
-# Download and install Adept Runtime
+# 1. Download and install runtime
 wget https://digilent.s3.amazonaws.com/Software/Adept2Runtime/2.27.9/digilent.adept.runtime_2.27.9-arm64.deb
 sudo dpkg -i digilent.adept.runtime_2.27.9-arm64.deb
 
-# Download and install Adept Utilities
+# 2. Download and install utilities
 wget https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-arm64.deb
 sudo dpkg -i digilent.adept.utilities_2.7.1-arm64.deb
 
-# Fix USB permissions
+# 3. Set up USB permissions
 sudo usermod -a -G dialout $USER
+
+# 4. Create udev rules
 sudo tee /etc/udev/rules.d/99-digilent.rules << 'EOF'
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", MODE="0666"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6014", MODE="0666"
 SUBSYSTEM=="usb", ATTRS{idVendor}=="1443", MODE="0666"
 EOF
 
+# 5. Apply changes
 sudo udevadm control --reload-rules && sudo udevadm trigger
 sudo reboot
 ```
 
-### Test Your Setup
+</details>
+
+## 🔧 Usage
+
+### Basic Commands
+
+| Command | Description | Example |
+|---------|-------------|---------|
+| **Enumerate Devices** | List all connected FPGAs | `djtgcfg enum` |
+| **Program FPGA** | Upload bitstream to device | `djtgcfg prog -d ArtyS7 -i 0 -f design.bit` |
+| **Initialize Chain** | Setup JTAG chain | `djtgcfg init -d ArtyS7` |
+| **Clear FPGA** | Erase configuration | `djtgcfg erase -d ArtyS7 -i 0` |
+
+### Example Workflow
 
 ```bash
-# Connect your FPGA board and check detection
-djtgcfg enum
+# 1. Check connected devices
+$ djtgcfg enum
+Found 1 device(s)
 
-# Expected output:
-# Found 1 device(s)
-# Device: ArtyS7
-#     Product Name: Digilent Arty S7 - 25
+Device: ArtyS7
+    Product Name:   Digilent Arty S7 - 25
+    Serial Number:  210352BB8A3A
+
+# 2. Initialize the device
+$ djtgcfg init -d ArtyS7
+
+# 3. Program your bitstream
+$ djtgcfg prog -d ArtyS7 -i 0 -f my_design.bit
+Programming device...
+Programming succeeded.
 ```
 
-## 💻 Usage
+## 📚 Supported Boards
 
-### Basic Programming
+<div align="center">
 
+| Board Family | Model | Device Name | Status |
+|:------------:|:-----:|:-----------:|:------:|
+| **Arty** | S7-25/50 | `ArtyS7` | ✅ Tested |
+| **Arty** | A7-35T/100T | `ArtyA7` | ✅ Supported |
+| **Basys** | Basys 3 | `Basys3` | ✅ Supported |
+| **Nexys** | A7 | `NexysA7` | ✅ Supported |
+| **Nexys** | 4 DDR | `Nexys4DDR` | ✅ Supported |
+| **Cmod** | A7 | `CmodA7` | ✅ Supported |
+| **Zybo** | Z7 | `ZyboZ7` | ✅ Supported |
+
+</div>
+
+## 🐛 Troubleshooting
+
+<details>
+<summary>❌ <b>"libdmgr.so.2: cannot open shared object file"</b></summary>
+
+**Problem:** Runtime library is missing
+
+**Solution:** Install runtime BEFORE utilities
 ```bash
-# Program your FPGA with a .bit file
-djtgcfg prog -d ArtyS7 -i 0 -f your_design.bit
-
-# Program with verification (recommended)
-djtgcfg prog -d ArtyS7 -i 0 -f your_design.bit -v
+sudo dpkg -i digilent.adept.runtime_*-arm64.deb
+sudo dpkg -i digilent.adept.utilities_*-arm64.deb
 ```
+</details>
 
-### Advanced Commands
+<details>
+<summary>❌ <b>"No devices found"</b></summary>
 
+**Problem:** FPGA not detected
+
+**Solutions:**
+1. Check USB cable and connection
+2. Verify user permissions: `groups $USER`
+3. Try with sudo: `sudo djtgcfg enum`
+4. Reboot after installation
+5. Check dmesg for USB errors: `dmesg | tail`
+</details>
+
+<details>
+<summary>❌ <b>"Permission denied"</b></summary>
+
+**Problem:** USB permissions not set
+
+**Solution:** Add user to dialout group and reboot
 ```bash
-# List all connected devices
-djtgcfg enum
-
-# Get detailed device info
-djtgcfg enum -d ArtyS7 --capabilities
-
-# Program with progress indication
-djtgcfg prog -d ArtyS7 -i 0 -f design.bit -v --progress
-```
-
-## 🔧 Supported Boards
-
-| Board | Device Name | Tested |
-|-------|-------------|---------|
-| Arty S7-25/50 | `ArtyS7` | ✅ |
-| Arty A7-35/100 | `ArtyA7` | ✅ |
-| Basys 3 | `Basys3` | ✅ |
-| Nexys 4/A7 | `Nexys4` | ✅ |
-| Cmod S7 | `CmodS7` | ✅ |
-| Analog Discovery | `ADiscovery` | ✅ |
-
-## ⚡ Performance
-
-| Operation | Raspberry Pi 5 | Raspberry Pi 4 |
-|-----------|----------------|----------------|
-| Arty S7 Programming | ~8 seconds | ~12 seconds |
-| Device Detection | <1 second | <1 second |
-| Large Bitstream (>1MB) | ~15 seconds | ~25 seconds |
-
-## 📊 Development Workflow
-
-Since Vivado doesn't run on ARM processors, use this hybrid approach:
-
-1. **Design Phase**: Use Vivado on x86_64 computer
-2. **Transfer Phase**: Move .bit files to Raspberry Pi  
-3. **Programming Phase**: Use Pi for programming and testing
-
-## 🌐 Remote Development Setup
-
-### SSH Programming
-```bash
-# Program remotely via SSH
-ssh pi@raspberrypi.local "djtgcfg prog -d ArtyS7 -i 0 -f /tmp/design.bit -v"
-
-# Copy and program in one command  
-scp design.bit pi@raspberrypi.local:/tmp/ && ssh pi@raspberrypi.local "djtgcfg prog -d ArtyS7 -i 0 -f /tmp/design.bit -v"
-```
-
-### Auto-sync with rsync
-```bash
-# Auto-sync Vivado output to Pi
-rsync -av ./project.runs/impl_1/*.bit pi@raspberrypi.local:~/bitfiles/
-```
-
-## 🛠️ Troubleshooting
-
-### Device Not Detected
-```bash
-# Check USB connection
-lsusb | grep -E "(0403:6010|1443:)"
-
-# Verify permissions
-groups $USER  # Should include 'dialout'
-
-# Check udev rules
-ls -l /etc/udev/rules.d/99-digilent.rules
-```
-
-### Command Not Found
-```bash
-# Verify installation
-dpkg -l | grep digilent
-
-# Check PATH
-which djtgcfg
-```
-
-### Permission Errors
-```bash
-# Re-add user to dialout group
 sudo usermod -a -G dialout $USER
-
-# Reload udev rules
-sudo udevadm control --reload-rules
-sudo udevadm trigger
-
-# Reboot to apply changes
 sudo reboot
 ```
+</details>
 
-### Docker Repository Error
-If you see Docker repository errors during apt update:
-```bash
-sudo rm /etc/apt/sources.list.d/docker.list
-sudo apt update
-```
+## 🛠️ System Requirements
+
+- **Hardware:** Raspberry Pi 3/4/5 or compatible ARM board
+- **OS:** Raspberry Pi OS (32-bit or 64-bit)
+- **Architecture:** ARM64 or ARMHF
+- **Storage:** ~50MB free space
+- **Connection:** USB port for FPGA board
+
+## 📊 Version Compatibility
+
+| Component | Version | Architecture | Status |
+|-----------|---------|--------------|--------|
+| Adept Runtime | 2.27.9 | ARM64 | ✅ Verified |
+| Adept Runtime | 2.27.9 | ARMHF | ❓ May vary |
+| Adept Utilities | 2.7.1 | ARM64 | ✅ Verified |
+| Adept Utilities | 2.7.1 | ARMHF | ✅ Verified |
 
 ## 🤝 Contributing
 
-Contributions welcome! Here's how you can help:
+We welcome contributions! Here's how you can help:
 
-- 🐛 Report bugs and issues
-- 📝 Improve documentation  
-- ✨ Add support for new boards
-- 🧪 Test on different Pi models
-- 🔧 Submit bug fixes and improvements
+1. 🐛 **Report bugs** - [Open an issue](https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/issues)
+2. 💡 **Suggest features** - Share your ideas
+3. 🔧 **Submit PRs** - Fix bugs or add features
+4. 📖 **Improve docs** - Help others get started
+5. ⭐ **Star the repo** - Show your support!
 
-## 📜 License
+## 📄 License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License. Digilent Adept tools are subject to [Digilent's license terms](https://digilent.com/).
 
 ## 🙏 Acknowledgments
 
-- **Digilent** for providing ARM64 packages and excellent FPGA boards
-- **Raspberry Pi Foundation** for the amazing single-board computers
-- **Community contributors** who tested and improved this setup
-
-## 📚 Additional Resources
-
-- [Digilent Adept Documentation](https://digilent.com/reference/software/adept/start)
-- [Vivado Design Suite User Guide](https://www.xilinx.com/support/documentation/sw_manuals/xilinx2023_2/ug973-vivado-release-notes-install-license.pdf)
-- [Raspberry Pi Official Documentation](https://www.raspberrypi.org/documentation/)
-
-## 📞 Support
-
-- **Issues**: [GitHub Issues](https://github.com/yourusername/rpi-fpga-programmer/issues)
-- **Community**: [Digilent Forum](https://forum.digilent.com/)
+- **Digilent** for Adept Runtime and Utilities
+- **Raspberry Pi Foundation** for the amazing hardware
+- **FPGA Community** for testing and feedback
 
 ---
 
-**Made with ❤️ for the FPGA and Raspberry Pi communities**
+<div align="center">
 
-[![GitHub stars](https://img.shields.io/github/stars/yourusername/rpi-fpga-programmer)](https://github.com/yourusername/rpi-fpga-programmer/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/yourusername/rpi-fpga-programmer)](https://github.com/yourusername/rpi-fpga-programmer/network)
-[![GitHub issues](https://img.shields.io/github/issues/yourusername/rpi-fpga-programmer)](https://github.com/yourusername/rpi-fpga-programmer/issues)
+**Made with ❤️ for the FPGA community**
+
+[Report Bug](https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/issues) • [Request Feature](https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/issues)
+
+</div>
+```
+
+This README features:
+- Clean visual design with centered headers and badges
+- Tables for organized information
+- Collapsible sections for troubleshooting
+- Clear command examples with output
+- Status indicators (✅/❌/❓)
+- Professional formatting that renders well on GitHub
+- Complete installation and usage instructions
+- Easy-to-scan layout with emojis for visual navigation
