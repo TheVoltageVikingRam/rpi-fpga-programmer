@@ -59,77 +59,41 @@ GITHUB_BASE="https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main
 
 # Download appropriate packages based on architecture
 if [[ "$ARCH" == "arm64" ]]; then
-    # Runtime from your GitHub repo - using raw URL
+    # Both files from your GitHub repo
     RUNTIME_URL="${GITHUB_BASE}/digilent.adept.runtime_2.27.9-arm64.deb"
     RUNTIME_FILE="digilent.adept.runtime_2.27.9-arm64.deb"
-    
-    # Utilities - check if it's in your repo first
     UTILITIES_URL="${GITHUB_BASE}/digilent.adept.utilities_2.7.1-arm64.deb"
     UTILITIES_FILE="digilent.adept.utilities_2.7.1-arm64.deb"
-    
-    # Check if utilities exists in your repo, if not use Digilent's URL
-    if ! curl -L --head --fail "$UTILITIES_URL" >/dev/null 2>&1; then
-        echo "  📋 Utilities not found in repository, using Digilent servers..."
-        UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-arm64.deb"
-    fi
 else
-    # For armhf
+    # For armhf - check if you have these in your repo
     echo "⚠️  ARMHF support: Checking for packages..."
-    # Try to get runtime from your repo first
     RUNTIME_URL="${GITHUB_BASE}/digilent.adept.runtime_2.27.9-armhf.deb"
     RUNTIME_FILE="digilent.adept.runtime_2.27.9-armhf.deb"
-    
-    # Check if runtime exists in your repo
-    if ! curl -L --head --fail "$RUNTIME_URL" >/dev/null 2>&1; then
-        echo "   Runtime not found in repository, using Digilent servers..."
-        RUNTIME_URL="https://digilent.s3.amazonaws.com/Software/Adept2Runtime/2.27.9/digilent.adept.runtime_2.27.9-armhf.deb"
-    fi
-    
-    # Try to get utilities from your repo
     UTILITIES_URL="${GITHUB_BASE}/digilent.adept.utilities_2.7.1-armhf.deb"
     UTILITIES_FILE="digilent.adept.utilities_2.7.1-armhf.deb"
     
-    # Check if utilities exists in your repo
-    if ! curl -L --head --fail "$UTILITIES_URL" >/dev/null 2>&1; then
-        echo "   Utilities not found in repository, using Digilent servers..."
-        UTILITIES_URL="https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-armhf.deb"
-    fi
-fi
-
-# Download runtime package with curl (better for GitHub)
-echo "  📥 Downloading Adept Runtime..."
-if [[ "$RUNTIME_URL" == *"github.com"* ]]; then
-    # Use curl for GitHub
-    if ! curl -L -o "$RUNTIME_FILE" "$RUNTIME_URL"; then
-        echo "❌ Failed to download runtime package from GitHub"
-        echo "   URL: $RUNTIME_URL"
-        exit 1
-    fi
-else
-    # Use wget for other sources
-    if ! wget -q --show-progress -O "$RUNTIME_FILE" "$RUNTIME_URL"; then
-        echo "❌ Failed to download runtime package"
-        echo "   URL: $RUNTIME_URL"
+    # Check if armhf files exist in your repo
+    if ! curl -L --head --fail "$RUNTIME_URL" >/dev/null 2>&1; then
+        echo "❌ ARMHF packages not found in repository."
+        echo "   Please add armhf packages to your repo or use arm64 architecture."
         exit 1
     fi
 fi
 
-# Download utilities package
-echo "  📥 Downloading Adept Utilities..."
-if [[ "$UTILITIES_URL" == *"github.com"* ]]; then
-    # Use curl for GitHub
-    if ! curl -L -o "$UTILITIES_FILE" "$UTILITIES_URL"; then
-        echo "❌ Failed to download utilities package from GitHub"
-        echo "   URL: $UTILITIES_URL"
-        exit 1
-    fi
-else
-    # Use wget for other sources
-    if ! wget -q --show-progress -O "$UTILITIES_FILE" "$UTILITIES_URL"; then
-        echo "❌ Failed to download utilities package"
-        echo "   URL: $UTILITIES_URL"
-        exit 1
-    fi
+# Download runtime package from GitHub
+echo "  📥 Downloading Adept Runtime from GitHub repository..."
+if ! curl -L -o "$RUNTIME_FILE" "$RUNTIME_URL"; then
+    echo "❌ Failed to download runtime package from GitHub"
+    echo "   URL: $RUNTIME_URL"
+    exit 1
+fi
+
+# Download utilities package from GitHub
+echo "  📥 Downloading Adept Utilities from GitHub repository..."
+if ! curl -L -o "$UTILITIES_FILE" "$UTILITIES_URL"; then
+    echo "❌ Failed to download utilities package from GitHub"
+    echo "   URL: $UTILITIES_URL"
+    exit 1
 fi
 
 # Verify downloads
@@ -226,7 +190,6 @@ echo ""
 echo "🎉 Your Raspberry Pi FPGA Programming Station is ready!"
 echo ""
 
-
-sudo djtgcfg enum
-
-
+# Try to run enum without sudo first (will work after reboot)
+echo "🔍 Attempting to detect connected devices..."
+djtgcfg enum 2>/dev/null || echo "⚠️  Device detection requires reboot for USB permissions"
