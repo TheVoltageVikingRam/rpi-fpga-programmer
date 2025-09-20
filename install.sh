@@ -230,12 +230,3 @@ echo ""
 sudo djtgcfg enum
 
 
-# Ask about reboot
-read -p "🔄 Reboot now to apply changes? (y/N): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo "🔄 Rebooting..."
-    sudo reboot
-else
-    echo "⚠️  Remember to reboot before using: sudo reboot"
-fi
