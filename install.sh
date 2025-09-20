@@ -225,7 +225,11 @@ echo "📖 For more options: djtgcfg --help"
 echo ""
 echo "🎉 Your Raspberry Pi FPGA Programming Station is ready!"
 echo ""
+
+
 djtgcfg enum
+
+
 # Ask about reboot
 read -p "🔄 Reboot now to apply changes? (y/N): " -n 1 -r
 echo
