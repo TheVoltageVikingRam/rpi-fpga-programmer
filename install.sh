@@ -227,7 +227,7 @@ echo "🎉 Your Raspberry Pi FPGA Programming Station is ready!"
 echo ""
 
 
-djtgcfg enum
+sudo djtgcfg enum
 
 
 # Ask about reboot
