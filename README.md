@@ -61,26 +61,35 @@ curl -fsSL https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-progra
 #### For ARM64 (Raspberry Pi 4/5)
 
 ```bash
-# 1. Download and install runtime
-wget https://digilent.s3.amazonaws.com/Software/Adept2Runtime/2.27.9/digilent.adept.runtime_2.27.9-arm64.deb
+# 1. Download and install runtime from YOUR GitHub repo
+curl -L https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main/digilent.adept.runtime_2.27.9-arm64.deb -o digilent.adept.runtime_2.27.9-arm64.deb
 sudo dpkg -i digilent.adept.runtime_2.27.9-arm64.deb
 
-# 2. Download and install utilities
+# 2. Download and install utilities (from Digilent or your repo if you host it)
 wget https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-arm64.deb
 sudo dpkg -i digilent.adept.utilities_2.7.1-arm64.deb
 
-# 3. Set up USB permissions
+# 3. Fix any dependency issues
+sudo apt-get install -f
+
+# 4. Set up USB permissions
 sudo usermod -a -G dialout $USER
 
-# 4. Create udev rules
+# 5. Create udev rules
 sudo tee /etc/udev/rules.d/99-digilent.rules << 'EOF'
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", MODE="0666"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6014", MODE="0666"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1443", MODE="0666"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", MODE="0666", GROUP="dialout"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6014", MODE="0666", GROUP="dialout"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1443", MODE="0666", GROUP="dialout"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0666", GROUP="dialout"
 EOF
 
-# 5. Apply changes
+# 6. Apply changes
 sudo udevadm control --reload-rules && sudo udevadm trigger
+
+# 7. Update library cache
+sudo ldconfig
+
+# 8. Reboot to apply all changes
 sudo reboot
 ```
 
