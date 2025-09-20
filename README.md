@@ -1,6 +1,4 @@
-Here's a comprehensive README.md with visual design using GitHub-supported markdown:
 
-```markdown
 <div align="center">
 
 # 🚀 Raspberry Pi FPGA Programmer
