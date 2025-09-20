@@ -61,12 +61,14 @@ curl -fsSL https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-progra
 #### For ARM64 (Raspberry Pi 4/5)
 
 ```bash
+# Manual Installation Guide - Both packages from YOUR GitHub repo
+
 # 1. Download and install runtime from YOUR GitHub repo
 curl -L https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main/digilent.adept.runtime_2.27.9-arm64.deb -o digilent.adept.runtime_2.27.9-arm64.deb
 sudo dpkg -i digilent.adept.runtime_2.27.9-arm64.deb
 
-# 2. Download and install utilities (from Digilent or your repo if you host it)
-wget https://digilent.s3.amazonaws.com/Software/AdeptUtilities/2.7.1/digilent.adept.utilities_2.7.1-arm64.deb
+# 2. Download and install utilities from YOUR GitHub repo
+curl -L https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main/digilent.adept.utilities_2.7.1-arm64.deb -o digilent.adept.utilities_2.7.1-arm64.deb
 sudo dpkg -i digilent.adept.utilities_2.7.1-arm64.deb
 
 # 3. Fix any dependency issues
