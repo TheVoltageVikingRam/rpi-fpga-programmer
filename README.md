@@ -53,49 +53,6 @@ Program Xilinx FPGAs directly from your Pi with Digilent boards
 curl -fsSL https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-programmer/main/install.sh | bash
 ```
 
-### Manual Installation
-
-<details>
-<summary>📖 Click for manual installation steps</summary>
-
-#### For ARM64 (Raspberry Pi 4/5)
-
-```bash
-# Manual Installation Guide - Both packages from YOUR GitHub repo
-
-# 1. Download and install runtime from YOUR GitHub repo
-curl -L https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main/digilent.adept.runtime_2.27.9-arm64.deb -o digilent.adept.runtime_2.27.9-arm64.deb
-sudo dpkg -i digilent.adept.runtime_2.27.9-arm64.deb
-
-# 2. Download and install utilities from YOUR GitHub repo
-curl -L https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main/digilent.adept.utilities_2.7.1-arm64.deb -o digilent.adept.utilities_2.7.1-arm64.deb
-sudo dpkg -i digilent.adept.utilities_2.7.1-arm64.deb
-
-# 3. Fix any dependency issues
-sudo apt-get install -f
-
-# 4. Set up USB permissions
-sudo usermod -a -G dialout $USER
-
-# 5. Create udev rules
-sudo tee /etc/udev/rules.d/99-digilent.rules << 'EOF'
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", MODE="0666", GROUP="dialout"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6014", MODE="0666", GROUP="dialout"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1443", MODE="0666", GROUP="dialout"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0666", GROUP="dialout"
-EOF
-
-# 6. Apply changes
-sudo udevadm control --reload-rules && sudo udevadm trigger
-
-# 7. Update library cache
-sudo ldconfig
-
-# 8. Reboot to apply all changes
-sudo reboot
-```
-
-</details>
 
 ## 🔧 Usage
 
