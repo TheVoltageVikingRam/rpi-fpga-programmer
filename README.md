@@ -111,6 +111,8 @@ sudo udevadm trigger
 # 8. Reboot to apply permissions
 sudo reboot
 </details>
+
+
 ## 🔧 Usage
 
 ### Basic Commands
