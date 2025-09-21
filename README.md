@@ -1,7 +1,7 @@
 
 <div align="center">
 
-# 🚀 Raspberry Pi FPGA Programmer
+# 🚀 Raspberry Pi 5 FPGA Programmer
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Raspberry%20Pi-red)](https://www.raspberrypi.org/)
@@ -142,7 +142,7 @@ sudo reboot
 
 ## 🛠️ System Requirements
 
-- **Hardware:** Raspberry Pi 3/4/5 or compatible ARM board
+- **Hardware:** Raspberry Pi 5 or compatible ARM board
 - **OS:** Raspberry Pi OS (32-bit or 64-bit)
 - **Architecture:** ARM64 or ARMHF
 - **Storage:** ~50MB free space
