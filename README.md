@@ -52,65 +52,6 @@ Program Xilinx FPGAs directly from your Pi with Digilent boards
 ```bash
 curl -fsSL https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-programmer/main/install.sh | bash
 ```
-### Manual Installation
-
-<details>
-<summary>📖 Click to expand</summary>
-
-```bash
-# ================================
-# Raspberry Pi FPGA Programmer - Manual Installation
-# Digilent Adept Runtime & Utilities (ARM64/ARMHF)
-# ================================
-
-# 1. Check Raspberry Pi model and architecture
-cat /proc/device-tree/model
-dpkg --print-architecture   # should be arm64 or armhf
-
-# 2. Clean up any broken installations
-sudo dpkg --remove --force-remove-reinstreq digilent.waveforms digilent.adept.runtime digilent.adept.utilities
-sudo apt --fix-broken install -y
-sudo rm -f /etc/apt/sources.list.d/docker.list   # remove problematic docker repo if exists
-
-# 3. Install dependencies
-sudo apt update
-sudo apt install -y wget curl libusb-1.0-0 libftdi1-2
-
-# 4. Download Adept packages
-# Option A: From GitHub repo (arm64 shown, replace with armhf if needed)
-wget https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main/digilent.adept.runtime_2.27.9-arm64.deb
-wget https://github.com/TheVoltageVikingRam/rpi-fpga-programmer/raw/main/digilent.adept.utilities_2.7.1-arm64.deb
-
-# Option B: From Digilent official website
-# https://digilent.com/shop/software/digilent-adept/download/
-
-# 5. Install Adept Runtime
-sudo dpkg -i digilent.adept.runtime_*.deb
-sudo apt install -f -y   # fix dependencies if needed
-
-# 6. Install Adept Utilities
-sudo dpkg -i digilent.adept.utilities_*.deb
-sudo apt install -f -y
-
-# 7. Set up USB permissions
-sudo usermod -a -G dialout $USER
-
-# Create udev rules
-sudo tee /etc/udev/rules.d/99-digilent.rules > /dev/null << 'EOF'
-# Digilent FPGA boards
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", MODE="0666", GROUP="dialout"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6014", MODE="0666", GROUP="dialout"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1443", MODE="0666", GROUP="dialout"
-# Digilent USB Serial
-SUBSYSTEM=="usb", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0666", GROUP="dialout"
-EOF
-
-sudo udevadm control --reload-rules
-sudo udevadm trigger
-
-# 8. Reboot to apply permissions
-sudo reboot
-</details>
 
 
 ## 🔧 Usage
