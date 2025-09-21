@@ -47,7 +47,7 @@ Program Xilinx FPGAs directly from your Pi with Digilent boards
 
 ## 🚀 Installation
 
-### Quick Install (Recommended)
+### Quick Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/TheVoltageVikingRam/rpi-fpga-programmer/main/install.sh | bash
